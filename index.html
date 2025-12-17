@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Kaizen Digital - Execução & Mentalidade</title>
+    <title>Agenda Kaizen Digital - Com Sincronização Cloud</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
     <style>
         :root {
             --primary: #2980b9;
@@ -33,6 +36,112 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
+        }
+
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .login-card h1 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 2em;
+        }
+
+        .login-card p {
+            color: var(--text);
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .google-btn {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .google-btn:hover {
+            background: #f8f8f8;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .app-header h1 {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: var(--primary);
         }
 
         .header {
@@ -79,10 +188,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .tab-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
         .page {
             display: none;
             background: white;
@@ -99,6 +204,48 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .sync-status.syncing {
+            background: #f39c12;
+            color: white;
+        }
+
+        .sync-status.synced {
+            background: #27ae60;
+            color: white;
+        }
+
+        .sync-status.error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .page-header {
@@ -124,7 +271,6 @@
             box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
         }
 
-        /* PÁGINA 1: EXECUÇÃO */
         .execution-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -151,9 +297,6 @@
             color: var(--primary);
             margin-bottom: 15px;
             font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .section.secondary h3 {
@@ -238,7 +381,6 @@
             box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
         }
 
-        /* BLOCO DE FOCO PROFUNDO */
         .deep-work {
             background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
             padding: 25px;
@@ -372,7 +514,6 @@
             border-radius: 8px;
         }
 
-        /* PÁGINA 2: MENTALIDADE */
         .mindset-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -569,7 +710,7 @@
 
         .notification {
             position: fixed;
-            bottom: 20px;
+            bottom: 80px;
             right: 20px;
             background: var(--success);
             color: white;
@@ -592,12 +733,22 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .page {
+                padding: 15px;
+            }
+
             .execution-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
 
             .page-header {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
 
             .checklist {
@@ -608,12 +759,20 @@
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 1.8em;
+            .app-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .user-info {
+                flex-direction: column;
+                width: 100%;
             }
 
             .tabs {
                 flex-direction: column;
+                gap: 8px;
             }
 
             .tab-btn {
@@ -623,239 +782,300 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📋 Agenda Kaizen Digital</h1>
-            <p>Disciplina muda seu destino • Construa sua nova realidade</p>
-        </div>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('execution')">
-                ⚡ Execução Kaizen
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <h1>📋 Agenda Kaizen</h1>
+            <p>Disciplina muda seu destino<br>Sincronize em todos os seus dispositivos</p>
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <span>🔐</span> Entrar com Google
             </button>
-            <button class="tab-btn" onclick="switchTab('mindset')">
-                🧠 Mentalidade Kaizen
-            </button>
+            <p style="margin-top: 20px; font-size: 0.9em; color: #999;">
+                Seus dados ficarão sincronizados na nuvem
+            </p>
         </div>
+    </div>
 
-        <!-- PÁGINA 1: EXECUÇÃO -->
-        <div id="execution" class="page active">
-            <div class="page-header">
-                <div>
-                    <label class="form-label">Data:</label>
-                    <input type="date" class="date-input" id="execDate" onchange="saveData()">
-                </div>
-                <div>
-                    <label class="form-label">EXECUÇÃO KAIZEN</label>
-                    <input type="text" class="title-input" value="EXECUÇÃO KAIZEN" readonly>
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div id="appScreen" style="display: none;">
+        <div class="container">
+            <div class="app-header">
+                <h1>📋 Agenda Kaizen Digital</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div>
+                        <div id="userName" style="font-weight: bold;">Usuário</div>
+                        <div style="font-size: 0.9em;">Sincronizado ☁️</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Sair</button>
                 </div>
             </div>
 
-            <div class="execution-grid">
-                <!-- TAREFAS E COMPROMISSOS -->
-                <div>
-                    <div class="section">
-                        <h3>✓ Tarefas e Compromissos</h3>
-                        <div class="tasks-list">
-                            <div id="tasksList"></div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('execution')">
+                    ⚡ Execução Kaizen
+                </button>
+                <button class="tab-btn" onclick="switchTab('mindset')">
+                    🧠 Mentalidade Kaizen
+                </button>
+            </div>
+
+            <!-- PÁGINA 1: EXECUÇÃO -->
+            <div id="execution" class="page active">
+                <div class="page-header">
+                    <div>
+                        <label class="form-label">Data:</label>
+                        <input type="date" class="date-input" id="execDate" onchange="saveData()">
+                    </div>
+                    <div>
+                        <label class="form-label">EXECUÇÃO KAIZEN</label>
+                        <input type="text" class="title-input" value="EXECUÇÃO KAIZEN" readonly>
+                    </div>
+                </div>
+
+                <div class="execution-grid">
+                    <div>
+                        <div class="section">
+                            <h3>✓ Tarefas e Compromissos</h3>
+                            <div class="tasks-list" id="tasksList"></div>
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addTask()">
+                                + Adicionar Tarefa
+                            </button>
                         </div>
-                        <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addTask()">
-                            + Adicionar Tarefa
+                    </div>
+
+                    <div>
+                        <div class="section secondary">
+                            <h3>⭐ Prioridade Absoluta</h3>
+                            <div class="question">Qual é a ÚNICA coisa que, se feita agora, tornará todo o resto mais fácil?</div>
+                            <textarea class="answer-box" id="absolutePriority" placeholder="Digite sua resposta..." onchange="saveData()"></textarea>
+                        </div>
+
+                        <div class="section success" style="margin-top: 20px;">
+                            <h3>🎯 Missão MVM</h3>
+                            <div class="question">O que você vai entregar hoje que gera valor e fortalece seu papel dentro do MVM?</div>
+                            <textarea class="answer-box" id="mvmMission" placeholder="Digite sua resposta..." onchange="saveData()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="deep-work">
+                    <h2>🎯 Bloco de Foco Profundo (Deep Work)</h2>
+
+                    <div class="stamina-section">
+                        <div class="stamina-label">Stamina Hoje (Escala de Energia)</div>
+                        <div class="stamina-boxes" id="staminaBoxes"></div>
+                    </div>
+
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check1" onchange="saveData()">
+                            <label for="check1">📱 Celular em modo avião</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check2" onchange="saveData()">
+                            <label for="check2">🔕 Notificações desligadas</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check3" onchange="saveData()">
+                            <label for="check3">🤫 Ambiente limpo e silencioso</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check4" onchange="saveData()">
+                            <label for="check4">💡 Clareza total da tarefa</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check5" onchange="saveData()">
+                            <label for="check5">⏱️ Cronômetro ativado</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check6" onchange="saveData()">
+                            <label for="check6">💧 Garrafa ou copo de água</label>
+                        </div>
+                    </div>
+
+                    <div class="work-block">
+                        <div class="block-title">⏱️ Bloco 1</div>
+                        <div class="block-field">
+                            <div>
+                                <label>Tarefa-chave:</label>
+                                <input type="text" id="block1Task" placeholder="Digite a tarefa principal..." onchange="saveData()">
+                            </div>
+                            <div>
+                                <label>Início: h</label>
+                                <input type="number" id="block1Start" placeholder="00" min="0" max="23" onchange="saveData()">
+                            </div>
+                            <div>
+                                <label>Fim: h</label>
+                                <input type="number" id="block1End" placeholder="00" min="0" max="23" onchange="saveData()">
+                            </div>
+                        </div>
+                        <div class="block-field">
+                            <div style="grid-column: 1;">
+                                <label>Nota do bloco (1 a 5):</label>
+                                <input type="number" id="block1Score" placeholder="0" min="1" max="5" onchange="saveData()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="work-block">
+                        <div class="block-title">⏱️ Bloco 2</div>
+                        <div class="block-field">
+                            <div>
+                                <label>Tarefa-chave:</label>
+                                <input type="text" id="block2Task" placeholder="Digite a tarefa principal..." onchange="saveData()">
+                            </div>
+                            <div>
+                                <label>Início: h</label>
+                                <input type="number" id="block2Start" placeholder="00" min="0" max="23" onchange="saveData()">
+                            </div>
+                            <div>
+                                <label>Fim: h</label>
+                                <input type="number" id="block2End" placeholder="00" min="0" max="23" onchange="saveData()">
+                            </div>
+                        </div>
+                        <div class="block-field">
+                            <div style="grid-column: 1;">
+                                <label>Nota do bloco (1 a 5):</label>
+                                <input type="number" id="block2Score" placeholder="0" min="1" max="5" onchange="saveData()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="final-phrase">
+                        1% melhor todo dia 改善
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportData('execution')">📥 Exportar Execução</button>
+                    <button class="btn btn-primary" onclick="clearExecution()">🔄 Limpar Tudo</button>
+                </div>
+            </div>
+
+            <!-- PÁGINA 2: MENTALIDADE -->
+            <div id="mindset" class="page">
+                <div class="page-header">
+                    <div>
+                        <label class="form-label">Data:</label>
+                        <input type="date" class="date-input" id="mindsetDate" onchange="saveData()">
+                    </div>
+                    <div>
+                        <label class="form-label">MENTALIDADE KAIZEN</label>
+                        <input type="text" class="title-input" value="MENTALIDADE KAIZEN" readonly>
+                    </div>
+                </div>
+
+                <div class="mindset-grid">
+                    <div class="gratitude-section">
+                        <h3>🙏 Eu Sou Grato(a) por:</h3>
+                        <div class="gratitude-items" id="gratitudeList"></div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addGratitude()">
+                            + Adicionar Gratidão
                         </button>
                     </div>
-                </div>
 
-                <!-- PRIORIDADE ABSOLUTA E MISSÃO MVM -->
-                <div>
-                    <div class="section secondary">
-                        <h3>⭐ Prioridade Absoluta</h3>
-                        <div class="question">
-                            Qual é a ÚNICA coisa que, se feita agora, tornará todo o resto mais fácil?
-                        </div>
-                        <textarea class="answer-box" id="absolutePriority" placeholder="Digite sua resposta..." onchange="saveData()"></textarea>
+                    <div class="manifestations-section">
+                        <h3>✨ Manifestações Diárias (Visualize enquanto escreve)</h3>
+                        <div class="manifestation-items" id="manifestationList"></div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addManifestation()">
+                            + Adicionar Manifestação
+                        </button>
                     </div>
 
-                    <div class="section success" style="margin-top: 20px;">
-                        <h3>🎯 Missão MVM</h3>
-                        <div class="question">
-                            O que você vai entregar hoje que gera valor e fortalece seu papel dentro do MVM?
-                        </div>
-                        <textarea class="answer-box" id="mvmMission" placeholder="Digite sua resposta..." onchange="saveData()"></textarea>
+                    <div class="wins-section">
+                        <h3>🌟 4 Coisas Boas que Aconteceram Ontem</h3>
+                        <div class="wins-items" id="winsList"></div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addWin()">
+                            + Adicionar Vitória
+                        </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- BLOCO DE FOCO PROFUNDO -->
-            <div class="deep-work">
-                <h2>🎯 Bloco de Foco Profundo (Deep Work)</h2>
-
-                <div class="stamina-section">
-                    <div class="stamina-label">Stamina Hoje (Escala de Energia)</div>
-                    <div class="stamina-boxes" id="staminaBoxes"></div>
-                </div>
-
-                <div class="checklist">
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check1" onchange="saveData()">
-                        <label for="check1">📱 Celular em modo avião</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check2" onchange="saveData()">
-                        <label for="check2">🔕 Notificações desligadas</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check3" onchange="saveData()">
-                        <label for="check3">🤫 Ambiente limpo e silencioso</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check4" onchange="saveData()">
-                        <label for="check4">💡 Clareza total da tarefa</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check5" onchange="saveData()">
-                        <label for="check5">⏱️ Cronômetro ativado</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check6" onchange="saveData()">
-                        <label for="check6">💧 Garrafa ou copo de água</label>
+                    <div class="final-phrase">
+                        1% melhor todo dia 改善
                     </div>
                 </div>
 
-                <div class="work-block">
-                    <div class="block-title">⏱️ Bloco 1</div>
-                    <div class="block-field">
-                        <div>
-                            <label>Tarefa-chave:</label>
-                            <input type="text" id="block1Task" placeholder="Digite a tarefa principal..." onchange="saveData()">
-                        </div>
-                        <div>
-                            <label>Início: h</label>
-                            <input type="number" id="block1Start" placeholder="00" min="0" max="23" onchange="saveData()">
-                        </div>
-                        <div>
-                            <label>Fim: h</label>
-                            <input type="number" id="block1End" placeholder="00" min="0" max="23" onchange="saveData()">
-                        </div>
-                    </div>
-                    <div class="block-field">
-                        <div style="grid-column: 1;">
-                            <label>Nota do bloco (1 a 5):</label>
-                            <input type="number" id="block1Score" placeholder="0" min="1" max="5" onchange="saveData()">
-                        </div>
-                    </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportData('mindset')">📥 Exportar Mentalidade</button>
+                    <button class="btn btn-primary" onclick="clearMindset()">🔄 Limpar Tudo</button>
                 </div>
-
-                <div class="work-block">
-                    <div class="block-title">⏱️ Bloco 2</div>
-                    <div class="block-field">
-                        <div>
-                            <label>Tarefa-chave:</label>
-                            <input type="text" id="block2Task" placeholder="Digite a tarefa principal..." onchange="saveData()">
-                        </div>
-                        <div>
-                            <label>Início: h</label>
-                            <input type="number" id="block2Start" placeholder="00" min="0" max="23" onchange="saveData()">
-                        </div>
-                        <div>
-                            <label>Fim: h</label>
-                            <input type="number" id="block2End" placeholder="00" min="0" max="23" onchange="saveData()">
-                        </div>
-                    </div>
-                    <div class="block-field">
-                        <div style="grid-column: 1;">
-                            <label>Nota do bloco (1 a 5):</label>
-                            <input type="number" id="block2Score" placeholder="0" min="1" max="5" onchange="saveData()">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="final-phrase">
-                    1% melhor todo dia 改善
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-success" onclick="exportData('execution')">📥 Exportar Execução</button>
-                <button class="btn btn-primary" onclick="clearExecution()">🔄 Limpar Tudo</button>
-            </div>
-        </div>
-
-        <!-- PÁGINA 2: MENTALIDADE -->
-        <div id="mindset" class="page">
-            <div class="page-header">
-                <div>
-                    <label class="form-label">Data:</label>
-                    <input type="date" class="date-input" id="mindsetDate" onchange="saveData()">
-                </div>
-                <div>
-                    <label class="form-label">MENTALIDADE KAIZEN</label>
-                    <input type="text" class="title-input" value="MENTALIDADE KAIZEN" readonly>
-                </div>
-            </div>
-
-            <div class="mindset-grid">
-                <!-- GRATIDÃO -->
-                <div class="gratitude-section">
-                    <h3>🙏 Eu Sou Grato(a) por:</h3>
-                    <div class="gratitude-items">
-                        <div id="gratitudeList"></div>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addGratitude()">
-                        + Adicionar Gratidão
-                    </button>
-                </div>
-
-                <!-- MANIFESTAÇÕES -->
-                <div class="manifestations-section">
-                    <h3>✨ Manifestações Diárias (Visualize enquanto escreve)</h3>
-                    <div class="manifestation-items">
-                        <div id="manifestationList"></div>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addManifestation()">
-                        + Adicionar Manifestação
-                    </button>
-                </div>
-
-                <!-- 4 COISAS BOAS -->
-                <div class="wins-section">
-                    <h3>🌟 4 Coisas Boas que Aconteceram Ontem</h3>
-                    <div class="wins-items">
-                        <div id="winsList"></div>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addWin()">
-                        + Adicionar Vitória
-                    </button>
-                </div>
-
-                <div class="final-phrase">
-                    1% melhor todo dia 改善
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-success" onclick="exportData('mindset')">📥 Exportar Mentalidade</button>
-                <button class="btn btn-primary" onclick="clearMindset()">🔄 Limpar Tudo</button>
             </div>
         </div>
     </div>
 
+    <div id="syncStatus" class="sync-status" style="display: none;"></div>
+
     <script>
-        const STORAGE_KEY = 'kaizen_agenda_data';
+        // ✅ CREDENCIAIS FIREBASE - CONFIGURADAS CORRETAMENTE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeicAHKJn1eF6AHFYVeLuFQbsjx3LF7Hs",
+            authDomain: "agenda-kaizen-5807f.firebaseapp.com",
+            projectId: "agenda-kaizen-5807f",
+            storageBucket: "agenda-kaizen-5807f.firebasestorage.app",
+            messagingSenderId: "1086043816006",
+            appId: "1:1086043816006:web:79589faee8647350618a47"
+        };
+
+        let db, auth, currentUser;
         const TASKS_COUNT = 10;
         const STAMINA_COUNT = 10;
         const GRATITUDE_COUNT = 4;
         const MANIFESTATIONS_COUNT = 3;
         const WINS_COUNT = 4;
 
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeElements();
-            loadData();
-            setTodayDate();
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'block';
+                document.getElementById('userName').textContent = user.displayName || 'Usuário';
+                document.getElementById('userAvatar').textContent = (user.displayName || 'U')[0].toUpperCase();
+                if (user.photoURL) {
+                    document.getElementById('userAvatar').style.backgroundImage = `url(${user.photoURL})`;
+                }
+                initializeElements();
+                loadData();
+                setTodayDate();
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appScreen').style.display = 'none';
+            }
         });
 
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+                alert('Erro ao fazer login: ' + error.message);
+            });
+        }
+
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                auth.signOut();
+            }
+        }
+
+        function showSyncStatus(status, message) {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.style.display = 'flex';
+            statusEl.className = 'sync-status ' + status;
+            
+            if (status === 'syncing') {
+                statusEl.innerHTML = '<div class="spinner"></div> Sincronizando...';
+            } else if (status === 'synced') {
+                statusEl.innerHTML = '✓ Dados sincronizados';
+                setTimeout(() => statusEl.style.display = 'none', 2000);
+            } else if (status === 'error') {
+                statusEl.innerHTML = '✗ Erro na sincronização';
+            }
+        }
+
         function initializeElements() {
-            // Criar campos de tarefas
             let tasksHTML = '';
             for (let i = 0; i < TASKS_COUNT; i++) {
                 tasksHTML += `
@@ -867,14 +1087,12 @@
             }
             document.getElementById('tasksList').innerHTML = tasksHTML;
 
-            // Criar caixas de stamina
             let staminaHTML = '';
             for (let i = 0; i < STAMINA_COUNT; i++) {
                 staminaHTML += `<div class="stamina-box" id="stamina${i}" onclick="toggleStamina(${i})"></div>`;
             }
             document.getElementById('staminaBoxes').innerHTML = staminaHTML;
 
-            // Criar campos de gratidão
             let gratitudeHTML = '';
             for (let i = 0; i < GRATITUDE_COUNT; i++) {
                 gratitudeHTML += `
@@ -885,7 +1103,6 @@
             }
             document.getElementById('gratitudeList').innerHTML = gratitudeHTML;
 
-            // Criar campos de manifestações
             let manifestationHTML = '';
             for (let i = 0; i < MANIFESTATIONS_COUNT; i++) {
                 manifestationHTML += `
@@ -896,7 +1113,6 @@
             }
             document.getElementById('manifestationList').innerHTML = manifestationHTML;
 
-            // Criar campos de vitórias
             let winsHTML = '';
             for (let i = 0; i < WINS_COUNT; i++) {
                 winsHTML += `
@@ -944,6 +1160,10 @@
         }
 
         function saveData() {
+            if (!currentUser) return;
+            
+            showSyncStatus('syncing');
+
             const data = {
                 timestamp: new Date().toISOString(),
                 execution: {
@@ -983,7 +1203,6 @@
                 }
             };
 
-            // Coletar tarefas
             for (let i = 0; i < TASKS_COUNT; i++) {
                 data.execution.tasks.push({
                     completed: document.getElementById(`task${i}Check`).checked,
@@ -991,150 +1210,161 @@
                 });
             }
 
-            // Coletar stamina
             for (let i = 0; i < STAMINA_COUNT; i++) {
                 const box = document.getElementById(`stamina${i}`);
                 data.execution.stamina.push(box.classList.contains('active'));
             }
 
-            // Coletar gratidões
             for (let i = 0; i < GRATITUDE_COUNT; i++) {
                 data.mindset.gratitudes.push(document.getElementById(`gratitude${i}`).value);
             }
 
-            // Coletar manifestações
             for (let i = 0; i < MANIFESTATIONS_COUNT; i++) {
                 data.mindset.manifestations.push(document.getElementById(`manifestation${i}`).value);
             }
 
-            // Coletar vitórias
             for (let i = 0; i < WINS_COUNT; i++) {
                 data.mindset.wins.push(document.getElementById(`win${i}`).value);
             }
 
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            showNotification('✓ Dados salvos com sucesso!');
+            db.collection('users').doc(currentUser.uid).set(data)
+                .then(() => {
+                    showSyncStatus('synced', 'Dados sincronizados!');
+                })
+                .catch(error => {
+                    console.error('Erro ao salvar:', error);
+                    showSyncStatus('error', 'Erro na sincronização');
+                });
         }
 
         function loadData() {
-            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (!data) return;
+            if (!currentUser) return;
 
-            const exec = data.execution;
-            const mind = data.mindset;
+            db.collection('users').doc(currentUser.uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const exec = data.execution;
+                        const mind = data.mindset;
 
-            // Carregar execução
-            if (exec.date) document.getElementById('execDate').value = exec.date;
-            if (exec.absolutePriority) document.getElementById('absolutePriority').value = exec.absolutePriority;
-            if (exec.mvmMission) document.getElementById('mvmMission').value = exec.mvmMission;
+                        if (exec.date) document.getElementById('execDate').value = exec.date;
+                        if (exec.absolutePriority) document.getElementById('absolutePriority').value = exec.absolutePriority;
+                        if (exec.mvmMission) document.getElementById('mvmMission').value = exec.mvmMission;
 
-            // Carregar checks
-            exec.checks.forEach((checked, i) => {
-                document.getElementById(`check${i + 1}`).checked = checked;
-            });
+                        exec.checks.forEach((checked, i) => {
+                            document.getElementById(`check${i + 1}`).checked = checked;
+                        });
 
-            // Carregar tarefas
-            exec.tasks.forEach((task, i) => {
-                if (i < TASKS_COUNT) {
-                    document.getElementById(`task${i}Check`).checked = task.completed;
-                    document.getElementById(`task${i}`).value = task.text;
-                }
-            });
+                        exec.tasks.forEach((task, i) => {
+                            if (i < TASKS_COUNT) {
+                                document.getElementById(`task${i}Check`).checked = task.completed;
+                                document.getElementById(`task${i}`).value = task.text;
+                            }
+                        });
 
-            // Carregar stamina
-            exec.stamina.forEach((active, i) => {
-                if (i < STAMINA_COUNT) {
-                    const box = document.getElementById(`stamina${i}`);
-                    if (active) box.classList.add('active');
-                }
-            });
+                        exec.stamina.forEach((active, i) => {
+                            if (i < STAMINA_COUNT && active) {
+                                document.getElementById(`stamina${i}`).classList.add('active');
+                            }
+                        });
 
-            // Carregar blocos
-            if (exec.blocks[0]) {
-                document.getElementById('block1Task').value = exec.blocks[0].task;
-                document.getElementById('block1Start').value = exec.blocks[0].start;
-                document.getElementById('block1End').value = exec.blocks[0].end;
-                document.getElementById('block1Score').value = exec.blocks[0].score;
-            }
-            if (exec.blocks[1]) {
-                document.getElementById('block2Task').value = exec.blocks[1].task;
-                document.getElementById('block2Start').value = exec.blocks[1].start;
-                document.getElementById('block2End').value = exec.blocks[1].end;
-                document.getElementById('block2Score').value = exec.blocks[1].score;
-            }
+                        if (exec.blocks[0]) {
+                            document.getElementById('block1Task').value = exec.blocks[0].task;
+                            document.getElementById('block1Start').value = exec.blocks[0].start;
+                            document.getElementById('block1End').value = exec.blocks[0].end;
+                            document.getElementById('block1Score').value = exec.blocks[0].score;
+                        }
+                        if (exec.blocks[1]) {
+                            document.getElementById('block2Task').value = exec.blocks[1].task;
+                            document.getElementById('block2Start').value = exec.blocks[1].start;
+                            document.getElementById('block2End').value = exec.blocks[1].end;
+                            document.getElementById('block2Score').value = exec.blocks[1].score;
+                        }
 
-            // Carregar mentalidade
-            if (mind.date) document.getElementById('mindsetDate').value = mind.date;
+                        if (mind.date) document.getElementById('mindsetDate').value = mind.date;
 
-            mind.gratitudes.forEach((gratitude, i) => {
-                if (i < GRATITUDE_COUNT) {
-                    document.getElementById(`gratitude${i}`).value = gratitude;
-                }
-            });
+                        mind.gratitudes.forEach((gratitude, i) => {
+                            if (i < GRATITUDE_COUNT) {
+                                document.getElementById(`gratitude${i}`).value = gratitude;
+                            }
+                        });
 
-            mind.manifestations.forEach((manifestation, i) => {
-                if (i < MANIFESTATIONS_COUNT) {
-                    document.getElementById(`manifestation${i}`).value = manifestation;
-                }
-            });
+                        mind.manifestations.forEach((manifestation, i) => {
+                            if (i < MANIFESTATIONS_COUNT) {
+                                document.getElementById(`manifestation${i}`).value = manifestation;
+                            }
+                        });
 
-            mind.wins.forEach((win, i) => {
-                if (i < WINS_COUNT) {
-                    document.getElementById(`win${i}`).value = win;
-                }
-            });
+                        mind.wins.forEach((win, i) => {
+                            if (i < WINS_COUNT) {
+                                document.getElementById(`win${i}`).value = win;
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar:', error);
+                });
         }
 
         function exportData(type) {
-            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (!data) {
-                alert('Nenhum dado para exportar!');
+            if (!currentUser) {
+                alert('Você precisa estar logado para exportar!');
                 return;
             }
 
-            let content = '';
-            let filename = '';
+            db.collection('users').doc(currentUser.uid).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        alert('Nenhum dado para exportar!');
+                        return;
+                    }
 
-            if (type === 'execution') {
-                const exec = data.execution;
-                content = `EXECUÇÃO KAIZEN - ${exec.date}\n`;
-                content += `${'='.repeat(50)}\n\n`;
-                content += `PRIORIDADE ABSOLUTA:\n${exec.absolutePriority}\n\n`;
-                content += `MISSÃO MVM:\n${exec.mvmMission}\n\n`;
-                content += `TAREFAS:\n`;
-                exec.tasks.forEach((t, i) => {
-                    if (t.text) content += `${t.completed ? '✓' : ' '} ${t.text}\n`;
-                });
-                content += `\nBLOCO 1: ${exec.blocks[0].task}\nNota: ${exec.blocks[0].score}/5\n`;
-                content += `BLOCO 2: ${exec.blocks[1].task}\nNota: ${exec.blocks[1].score}/5\n`;
-                filename = `Execucao_Kaizen_${exec.date}.txt`;
-            } else {
-                const mind = data.mindset;
-                content = `MENTALIDADE KAIZEN - ${mind.date}\n`;
-                content += `${'='.repeat(50)}\n\n`;
-                content += `GRATIDÃO:\n`;
-                mind.gratitudes.forEach(g => {
-                    if (g) content += `• ${g}\n`;
-                });
-                content += `\nMANIFESTAÇÕES:\n`;
-                mind.manifestations.forEach(m => {
-                    if (m) content += `• ${m}\n`;
-                });
-                content += `\nVITÓRIAS DE ONTEM:\n`;
-                mind.wins.forEach(w => {
-                    if (w) content += `• ${w}\n`;
-                });
-                filename = `Mentalidade_Kaizen_${mind.date}.txt`;
-            }
+                    const data = doc.data();
+                    let content = '';
+                    let filename = '';
 
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            showNotification('✓ Arquivo exportado!');
+                    if (type === 'execution') {
+                        const exec = data.execution;
+                        content = `EXECUÇÃO KAIZEN - ${exec.date}\n`;
+                        content += `${'='.repeat(50)}\n\n`;
+                        content += `PRIORIDADE ABSOLUTA:\n${exec.absolutePriority}\n\n`;
+                        content += `MISSÃO MVM:\n${exec.mvmMission}\n\n`;
+                        content += `TAREFAS:\n`;
+                        exec.tasks.forEach((t, i) => {
+                            if (t.text) content += `${t.completed ? '✓' : ' '} ${t.text}\n`;
+                        });
+                        content += `\nBLOCO 1: ${exec.blocks[0].task}\nNota: ${exec.blocks[0].score}/5\n`;
+                        content += `BLOCO 2: ${exec.blocks[1].task}\nNota: ${exec.blocks[1].score}/5\n`;
+                        filename = `Execucao_Kaizen_${exec.date}.txt`;
+                    } else {
+                        const mind = data.mindset;
+                        content = `MENTALIDADE KAIZEN - ${mind.date}\n`;
+                        content += `${'='.repeat(50)}\n\n`;
+                        content += `GRATIDÃO:\n`;
+                        mind.gratitudes.forEach(g => {
+                            if (g) content += `• ${g}\n`;
+                        });
+                        content += `\nMANIFESTAÇÕES:\n`;
+                        mind.manifestations.forEach(m => {
+                            if (m) content += `• ${m}\n`;
+                        });
+                        content += `\nVITÓRIAS DE ONTEM:\n`;
+                        mind.wins.forEach(w => {
+                            if (w) content += `• ${w}\n`;
+                        });
+                        filename = `Mentalidade_Kaizen_${mind.date}.txt`;
+                    }
+
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    showNotification('✓ Arquivo exportado!');
+                });
         }
 
         function clearExecution() {
@@ -1145,12 +1375,9 @@
                 }
                 document.getElementById('absolutePriority').value = '';
                 document.getElementById('mvmMission').value = '';
-                document.getElementById('check1').checked = false;
-                document.getElementById('check2').checked = false;
-                document.getElementById('check3').checked = false;
-                document.getElementById('check4').checked = false;
-                document.getElementById('check5').checked = false;
-                document.getElementById('check6').checked = false;
+                for (let i = 1; i <= 6; i++) {
+                    document.getElementById(`check${i}`).checked = false;
+                }
                 for (let i = 0; i < STAMINA_COUNT; i++) {
                     document.getElementById(`stamina${i}`).classList.remove('active');
                 }
@@ -1190,6 +1417,13 @@
                 notification.remove();
             }, 3000);
         }
+
+        // Auto-save a cada 30 segundos
+        setInterval(() => {
+            if (currentUser) {
+                saveData();
+            }
+        }, 30000);
     </script>
 </body>
 </html>
